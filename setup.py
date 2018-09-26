@@ -1,5 +1,4 @@
-from disutils.spawn import find_executable
-import subprocess, pip
+import subprocess, pip, shutil
 import os, sys
 
 
@@ -26,8 +25,7 @@ def CheckPkg(pkg):
 		exec('import %s' % pkg)
 	except [ImportError, ModuleNotFoundError]:
 		print('Failed to find package: %s, running pip install' % pkg)
-		pip.main('install', pkg)
-
+		subprocess.call([sys.executable, "-m", "pip", "install", pkg])
 	finally:
 		exec('import %s' % pkg)
 		return
