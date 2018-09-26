@@ -8,7 +8,7 @@ PACKAGES = [
 	'astropy',
 	'numpy',
 	'matplotlib',
-	'argparse',
+	'argparse'
 ]
 
 
@@ -25,9 +25,13 @@ def CheckPkg(pkg):
 	try:
 		exec('import %s' % pkg)
 	except [ImportError, ModuleNotFoundError]:
-		print('Failed to find package: %s; running pip install %s' % (pkg, pkg))
+		print('Failed to find package: %s, running pip install' % pkg)
 		pip.main('install', pkg)
 
 	finally:
 		exec('import %s' % pkg)
 		return
+
+
+if __name__=='__main__':
+	main()
