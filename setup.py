@@ -8,7 +8,8 @@ PACKAGES = [
 	'matplotlib',
 	'argparse',
 	'pathlib',
-	'ipdb'
+	'ipdb',
+	'pandas'
 ]
 
 FileList = [
@@ -63,7 +64,7 @@ def AddToPath():
 
 	bashrc = str(pathlib.Path.home)+'/.bashrc'
 	if not os.path.exists(bashrc): 
-		print('WARNING (AddToPath): Could not find ~/.bashrc file, cannot add to path!')
+		print('WARNING (AddToPath): Could not find %s file, cannot add to path!' % bashrc)
 		return
 
 	cwd = os.getcwd()
