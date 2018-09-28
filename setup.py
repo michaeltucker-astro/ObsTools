@@ -52,7 +52,7 @@ def MakeExecutables():
 		with open(ff, 'w') as ofile:
 			ofile.write(''.join(lines))
 
-		subprocess.run('chmod u+x '+ff)
+		subprocess.run('chmod +x '+ff)
 
 
 def AddToPath():
