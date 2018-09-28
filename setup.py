@@ -1,13 +1,15 @@
 import subprocess, pip, shutil
 import os, sys
-
+import ipdb
 
 PACKAGES = [
 	'SpectRes',
 	'astropy',
 	'numpy',
 	'matplotlib',
-	'argparse'
+	'argparse',
+	'pathlib',
+	'ipdb'
 ]
 
 FileList = [
@@ -57,8 +59,10 @@ def MakeExecutables():
 
 
 def AddToPath():
-	bashrc = '~/.bashrc'
-	if not os.path.isfile(bashrc): 
+	from pathlib.Path import home
+
+	bashrc = str(home)+'/.bashrc'
+	if not os.path.exists(bashrc): 
 		print('WARNING (AddToPath): Could not find ~/.bashrc file, cannot add to path!')
 		return
 
