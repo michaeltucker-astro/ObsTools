@@ -75,7 +75,7 @@ def AddToPath():
 	with open(bashrc, 'a+') as ofile:
 		ofile.write(PATHline)
 
-	subprocess.run('source '+bashrc)
+	subprocess.run('source '+bashrc, shell=True)
 	print('Successfully added to $PATH!')
 
 if __name__=='__main__':
