@@ -1,6 +1,5 @@
 import subprocess, pip, shutil
 import os, sys
-import ipdb
 
 PACKAGES = [
 	'SpectRes',
@@ -60,7 +59,8 @@ def MakeExecutables():
 
 def AddToPath():
 	from pathlib.Path import home
-
+	import ipdb
+	
 	bashrc = str(home)+'/.bashrc'
 	if not os.path.exists(bashrc): 
 		print('WARNING (AddToPath): Could not find ~/.bashrc file, cannot add to path!')
