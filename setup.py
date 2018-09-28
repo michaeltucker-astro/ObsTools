@@ -58,7 +58,7 @@ def MakeExecutables():
 
 
 def AddToPath():
-	from pathlib
+	import pathlib
 	import ipdb
 
 	bashrc = str(pathlib.Path.home)+'/.bashrc'
