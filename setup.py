@@ -25,6 +25,8 @@ def main():
 	for pkg in PACKAGES:
 		CheckPkg(pkg)
 
+	CheckDependencies()
+
 	resp = input('Make Python scripts executables? [Y/n] >').strip().lower()
 	if resp == 'y' or resp == '':
 		MakeExecutables()
@@ -76,7 +78,17 @@ def AddToPath():
 		ofile.write(PATHline)
 
 	print('Successfully added to $PATH! ')
-	print('Run "source %s" to update shell PATH' % bashrc)
+	print('Run "source %s" to update current shell PATH' % bashrc)
+
+def CheckDependencies():
+	dependents = [
+	'google-chrome'
+	]
+
+	for dep in dependents:
+		path = shutil.which(dep)
+		if path == None:
+			print('WARNING (CheckDependencies): could not detect %s executable, edit FinderChart (obstools.py) accordingly!' % dep)
 
 if __name__=='__main__':
 	main()

@@ -3,7 +3,7 @@
 Strongly suggest creating a new Anaconda environment for these tools, will prevent any dependency conflicts
 Assuming you have Anaconda installed, do the following:
 (replace ObsTools with whatever you want to name this environment)
-$conda create -n ObsTools python=3.6 numpy scipy matplotlib astropy argparse pip
+$conda create -n ObsTools python=3.6 numpy scipy matplotlib astropy argparse pip pandas
 Then activate the environment:
 $source activate ObsTools (or whatever you named it)
 Now you're ready to roll.

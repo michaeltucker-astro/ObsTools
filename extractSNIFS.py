@@ -314,7 +314,7 @@ if __name__=='__main__':
 		default='', type=str)
 	parser.add_argument('-a', '--avoid', help='Objects to avoid (not extract). Same as above, can be re-used for multiple objects.', default='', type=str)
 	parser.add_argument('-o', '--overwrite', help='Overwrite existing extraced spectra? [0,1] Default: 0', default=0, choices=[0,1], type=int)
-	parser.add_argument('-c', '--combine', help='Combine method for blue/red arms. Default: waverage', default='waverage', 
+	parser.add_argument('-c', '--combine', help='Combine method for blue/red arms. Default: waverage', default='wavg', 
 		choices=['med', 'avg', 'wavg', 'mask', 'snid'], type=str)
 
 	args = parser.parse_args()
