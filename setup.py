@@ -36,7 +36,7 @@ def main():
 def CheckPkg(pkg):
 	try:
 		exec('import %s' % pkg)
-	except [ImportError, ModuleNotFoundError]:
+	except (ImportError, ModuleNotFoundError):
 		print('Failed to find package: %s, running pip install' % pkg)
 		subprocess.call([sys.executable, "-m", "pip", "install", pkg])
 	finally:
@@ -60,7 +60,7 @@ def MakeExecutables():
 def AddToPath():
 	from pathlib.Path import home
 	import ipdb
-	
+
 	bashrc = str(home)+'/.bashrc'
 	if not os.path.exists(bashrc): 
 		print('WARNING (AddToPath): Could not find ~/.bashrc file, cannot add to path!')
