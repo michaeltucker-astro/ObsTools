@@ -35,7 +35,12 @@ COLORS = {
 	'NaI':'c',
 	'FeII':'m',
 	'SII':'c',
-	'CaII':'g'
+	'CaII':'g',
+	'HeII':'g',
+	'OIII':'g',
+	'NII':'g',
+	'NeIII':'skyblue',
+	'NeV':'skyblue'
 }
 
 #Line IDs from the following:

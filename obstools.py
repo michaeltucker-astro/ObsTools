@@ -106,14 +106,26 @@ def FinderChart(ra, dec):
 	baseURL = 'http://astro.subhashbose.com/render_AlL.php?RA=%lf\&DEC=%lf' % (ra,dec)
 	subprocess.run('google-chrome --new-window %s' % baseURL, shell=True)
 
+def Scheduler(fname, penalty=2.0):
+	data = read_csv(fname)
+	if not all([True if colname in data.columns else False for colname in ['Object','RA', 'DEC']]):
+		raise KeyError('CSV file must have colnames Object, RA and DEC!')
+
+	names = data['Object'].as_matrix()
+	RA = data['RA'].as_matrix()
+	DEC = data['DEC'].as_matrix()
+
+
+	print('IMPLEMENTATION INCOMPLETE! exiting...')
+
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description='Contains observing tools: CSVtoJsky, FinderChart')
 	parser.add_argument('function', help='Which function to run', choices=['finderchart','fchart', 'fc','csv2jsky','c2j', 'scheduler', 'sched'], type=str)
-	parser.add_argument('--ra', '-r', help='RA for finderchart', type=str)
-	parser.add_argument('--dec', '-d', help='DEC for finderchart', type=str)
-	parser.add_argument('--fname', '-f', help='Filename for CSVtoJsky or Scheduler', type=str)
-
+	parser.add_argument('-r','--ra', help='RA for finderchart', type=str)
+	parser.add_argument('-d','--dec' help='DEC for finderchart', type=str)
+	parser.add_argument('-f','--fname', help='CSV file for CSVtoJsky or Scheduler', type=str)
+	parser.add_argument('-p','--DECpenalty', help='Penalty factor for declination movements in Scheduler. Default: 2', default=2, type=float)
 	args=parser.parse_args()
 	if args.function in ['finderchart', 'fchart', 'fc']:
 		assert args.ra != args.dec != None
@@ -124,7 +136,7 @@ if __name__=='__main__':
 		CSVtoJsky(args.fname)
 
 	elif args.function in ['scheduler', 'sched']:
-		Scheduler(args.fname)
+		Scheduler(args.fname, args.DECpenalty)
 
 	else:
 		raise ValueError('Unknown function argument %s' % args.function)
