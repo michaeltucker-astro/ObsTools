@@ -24,11 +24,11 @@ def main():
 		CheckPkg(pkg)
 
 	resp = input('Make Python scripts executables? [Y/n] >').strip().lower()
-	if resp == 'y':
+	if resp == 'y' or resp == '':
 		MakeExecutables()
 
 	resp2 = input('Add this directory to $PATH? [Y/n] >').strip().lower()
-	if resp == 'y':
+	if resp == 'y' or resp =='':
 		AddToPath()
 
 
