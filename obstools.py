@@ -109,10 +109,10 @@ def FinderChart(ra, dec):
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description='Contains observing tools: CSVtoJsky, FinderChart')
-	parser.add_argument('function', help='Which function to run', choices=['finderchart','fchart', 'fc','csv2jsky','c2j'], type=str)
+	parser.add_argument('function', help='Which function to run', choices=['finderchart','fchart', 'fc','csv2jsky','c2j', 'scheduler', 'sched'], type=str)
 	parser.add_argument('--ra', '-r', help='RA for finderchart', type=str)
 	parser.add_argument('--dec', '-d', help='DEC for finderchart', type=str)
-	parser.add_argument('--fname', '-f', help='Filename for CSVtoJsky', type=str)
+	parser.add_argument('--fname', '-f', help='Filename for CSVtoJsky or Scheduler', type=str)
 
 	args=parser.parse_args()
 	if args.function in ['finderchart', 'fchart', 'fc']:
@@ -123,5 +123,8 @@ if __name__=='__main__':
 		assert args.fname != None
 		CSVtoJsky(args.fname)
 
+	elif args.function in ['scheduler', 'sched']:
+		Scheduler(args.fname)
+
 	else:
-		raise ValueError
+		raise ValueError('Unknown function argument %s' % args.function)
