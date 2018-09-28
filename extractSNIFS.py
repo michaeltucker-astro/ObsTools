@@ -10,7 +10,7 @@ import os
 from astropy.time import Time
 import sys
 import argparse
-from spectra import CombineSpec
+import ipdb
 
 try:
 	from SpectRes import spectres
@@ -34,42 +34,48 @@ def main(directory, binsz, plot, overwrite, mask, blue, red, verbose, names, avo
 
 	fnames = FindFiles(directory, verbose)
 	for fbase in fnames:
-		if verbose: print('Processing base %s...' % fbase)
+#		ipdb.set_trace()
+		if verbose: print('\n\n'+'-'*30+'\n'+'Processing base %s...' % fbase+'\n'+'-'*30)
 		if red:
 			rff = os.path.join(directory,fbase + 'R.fits')
 			if not os.path.exists(rff):
 				print('WARNING: Could not find R spectrum (%s), skipping' %rff)
 				rspec = None
 				rff = None
-			rspec = Spectrum(rff)
-			if len(avoid) > 0:
-				if rspec.obj in avoid: continue
-			if len(names) > 0:
-				if rspec.obj not in names: continue
-			if rff == None:
-				break
-			rvar = os.path.join(directory,'var_'+fbase+'R.fits')
-			if not os.path.exists(rvar): raise IOError('Could not find variance file for %s' % rff)
+			if rff != None:
+				rspec = Spectrum(rff)
+				if len(avoid) > 0:
+					if rspec.obj in avoid: continue
+				if len(names) > 0:
+					if rspec.obj not in names: continue
 
-			rspec.add_err(rvar)
+				rvar = os.path.join(directory,'var_'+fbase+'R.fits')
+				if not os.path.exists(rvar): raise IOError('Could not find variance file for %s' % rff)
+
+				rspec.add_err(rvar)
 		else:
 			rspec = None
 
 		if blue:
 			bff = os.path.join(directory,fbase + 'B.fits')
-			bvar = os.path.join(directory,'var_'+fbase+'B.fits')
-			if not os.path.exists(bvar): raise IOError('Could not find variance file for %s' % bff)
-
-			bspec = Spectrum(bff)
-			if not rspec:
+			if not os.path.exists(bff):
+				print('WARNING: Could not find B spectrum (%s), skipping' %bff)
+				bspec = None
+				bff = None
+			if bff != None:
+				bspec = Spectrum(bff)
 				if len(avoid) > 0:
 					if bspec.obj in avoid: continue
 				if len(names) > 0:
 					if bspec.obj not in names: continue
 
-			bspec.add_err(bvar)
+				bvar = os.path.join(directory,'var_'+fbase+'B.fits')
+				if not os.path.exists(bvar): raise IOError('Could not find variance file %s' % bvar)
+
+				bspec.add_err(bvar)
 		else:
 			bspec = None
+
 
 		if rspec and bspec:
 			if verbose: print('\tCombing blue and red arms.')
@@ -85,8 +91,16 @@ def main(directory, binsz, plot, overwrite, mask, blue, red, verbose, names, avo
 
 		spec.rebin(binsz)
 
-		newff = spec.obj +'-'+str(round(spec.mjd), 4)+'-SNIFS.dat'
-		if os.path.exists(newff) and not overwrite: raise IOError('%s already exists! See overwrite flags.')
+		newff = spec.obj +'-'+str(round(spec.mjd, 4))+'-SNIFS.dat'
+		if os.path.exists(newff) and not overwrite: 
+			print('%s already exists! See overwrite flags, skipping...' % newff)
+			continue
+
+
+		if plot:
+			plt.plot(spec.wl, spec.fl, 'k-', drawstyle='steps-mid')
+			plt.title(spec.obj)
+			plt.show()
 
 		if verbose: print('\tWriting spectrum to %s' % newff)
 		with open(newff, 'w') as ofile:
@@ -94,7 +108,7 @@ def main(directory, binsz, plot, overwrite, mask, blue, red, verbose, names, avo
 			ofile.write('#MJD-OBS = %lf\n' % spec.mjd)
 			ofile.write('#DATE-OBS = %s\n' % spec.date)
 			ofile.write('#EXPTIME = %lf\n' % spec.expt)
-			ofile.write('#AIRMASS = %lf\n' % spec.airmass)
+			ofile.write('#AIRMASS = %lf\n' % spec.am)
 			ofile.write('#TELESCOPE = UH88\n')
 			ofile.write('#INSTRUMENT = SNIFS\n')
 			ofile.write('#WL FL ERR\n')
@@ -259,25 +273,34 @@ class Spectrum():
 	def GetExposure(self):
 		return int(self.fname.split('_')[3])
 
+	def rebin(self, binsz):
+		newwl = np.arange(self.wl.min()+2.0*binsz, self.wl.max()-2.0*binsz, binsz)
+		newfl, newerr = spectres.spectres(self.wl, self.fl, newwl, self.err)
+		self.wl = newwl
+		self.fl = newfl
+		self.err = newerr
+
 def CombineSpectra(bspec, rspec, combine='waverage', rebin=2.0):
 
-	if combine in ['median', 'average', 'waverage']:
+	if combine in ['med', 'avg', 'wavg']:
 		wl0 = bspec.wl.min()
 		wl1 = rspec.wl.max()	
 		full_wave = np.arange(wl0+rebin, wl1-rebin, rebin)
 		bfl = np.interp(full_wave, bspec.wl, bspec.fl, left=0.0, right=0.0)
-		berr = np.interp(full_wave, bspec.wl, bspec.fl, left=0.0, right=0.0)
+		berr = np.interp(full_wave, bspec.wl, bspec.err, left=0.0, right=0.0)
 		rfl = np.interp(full_wave, rspec.wl, rspec.fl, left=0.0, right=0.0)
 		rerr = np.interp(full_wave, rspec.wl, rspec.err, left=0.0, right=0.0)
 
-		if combine == 'median':
+		if combine == 'med':
 			full_fl = np.median(np.stack([bfl, rfl]), axis=0)
-		elif combine == 'average':
+		elif combine == 'avg':
 			full_fl = np.average(np.stack([bfl, rfl]), axis=0)
-		elif combine=='waverage':
+		elif combine=='wavg':
 			full_fl = np.average(np.stack([bfl, rfl]), axis=0, weights=np.stack([berr**-2.0, rerr**-2.0]))
 		else:
 			raise RuntimeError('Something went wrong in CombineSpectra...')
+
+		ferr = np.sqrt(berr**2.0 + rerr**2.0)
 
 		
 
@@ -293,11 +316,16 @@ def CombineSpectra(bspec, rspec, combine='waverage', rebin=2.0):
 		full_wave = np.arange(bspec.wl.min()+binsz, rspec.wl.max()-binsz, binsz)
 		full_fl = np.interp(full_wave, )
 
+	else:
+		raise ValueError('Unknown combine type %s' % combine)
 
 
-	full_fl, full_err = spectres.spectres()
+	spec = bspec
+	spec.wl = full_wave
+	spec.fl = full_fl
+	spec.err = ferr
 
-
+	return spec
 
 if __name__=='__main__':
 	description="Script for extracting SNIFS spectra already reduced by the pipeline."
