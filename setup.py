@@ -62,7 +62,7 @@ def AddToPath():
 	import pathlib
 	import ipdb
 
-	bashrc = str(pathlib.Path.home)+'/.bashrc'
+	bashrc = str(pathlib.Path.home())+'/.bashrc'
 	if not os.path.exists(bashrc): 
 		print('WARNING (AddToPath): Could not find %s file, cannot add to path!' % bashrc)
 		return
