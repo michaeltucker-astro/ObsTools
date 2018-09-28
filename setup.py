@@ -58,10 +58,10 @@ def MakeExecutables():
 
 
 def AddToPath():
-	from pathlib.Path import home
+	from pathlib
 	import ipdb
 
-	bashrc = str(home)+'/.bashrc'
+	bashrc = str(pathlib.Path.home)+'/.bashrc'
 	if not os.path.exists(bashrc): 
 		print('WARNING (AddToPath): Could not find ~/.bashrc file, cannot add to path!')
 		return
