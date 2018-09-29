@@ -119,14 +119,32 @@ def Scheduler(fname, penalty=2.0):
 	print('IMPLEMENTATION INCOMPLETE! exiting...')
 
 
+def MakeTNSlist(ofile, declim, maghigh, maglow, Ndays):
+	baseURL = "https://wis-tns.weizmann.ac.il/search?&name=&name_like=0&isTNS_AT=yes&public=all&unclassified_at=1&classified_sne=0&ra=&decl=&radius=\
+				&coords_unit=arcsec&groupid%5B%5D=null&classifier_groupid%5B%5D=null&type%5B%5D=null&date_start%5Bdate%5D=2018-09-21&date_end%5Bdate%5D=\
+				2018-09-28&discovery_mag_min=&discovery_mag_max=20&internal_name=&redshift_min=&redshift_max=&spectra_count=&discoverer=&classifier=&\
+				discovery_instrument%5B%5D=&classification_instrument%5B%5D=&hostname=&associated_groups%5B%5D=null&ext_catid=&num_page=1000&\
+				display%5Bredshift%5D=1&display%5Bhostname%5D=1&display%5Bhost_redshift%5D=1&display%5Bsource_group_name%5D=1&\
+				display%5Bclassifying_source_group_name%5D=1&display%5Bdiscovering_instrument_name%5D=0&display%5Bclassifing_instrument_name%5D=0&\
+				display%5Bprograms_name%5D=0&display%5Binternal_name%5D=1&display%5BisTNS_AT%5D=0&display%5Bpublic%5D=1&display%5Bend_pop_period%5D=0&\
+				display%5Bspectra_count%5D=1&display%5Bdiscoverymag%5D=1&display%5Bdiscmagfilter%5D=1&display%5Bdiscoverydate%5D=1&display%5Bdiscoverer%5D=1&\
+				display%5Bsources%5D=0&display%5Bbibcode%5D=0&display%5Bext_catalogs%5D=0"
+
+
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description='Contains observing tools: CSVtoJsky, FinderChart')
-	parser.add_argument('function', help='Which function to run', choices=['finderchart','fchart', 'fc','csv2jsky','c2j', 'scheduler', 'sched'], type=str)
+	parser.add_argument('function', help='Which function to run', choices=['finderchart','fchart', 'fc','csv2jsky','c2j', 'scheduler', 'sched','tnslist', 'tns'], type=str)
 	parser.add_argument('-r','--ra', help='RA for finderchart', type=str)
 	parser.add_argument('-d','--dec' help='DEC for finderchart', type=str)
 	parser.add_argument('-f','--fname', help='CSV file for CSVtoJsky or Scheduler', type=str)
 	parser.add_argument('-p','--DECpenalty', help='Penalty factor for declination movements in Scheduler. Default: 2', default=2, type=float)
+	parser.add_argument('-dl', '--dec-limit', help='Dec. limit for TNS target list. Default: -30 [deg]', default=-30.0, type=float)
+	parser.add_argument('-mu', '--mag-upper', help='Mag upper limit for TNS target list. Default: 20 [mag]', default=20.0, type=float)
+	parser.add_argument('-ml', '--mag-lower', help='Mag lower limit for TNS target list. Default: 0 [mag]', default=0.0, type=float)
+	parser.add_argument('-o', '--output', help='Output filename for TNS target list. Default: tns-list.csv', default='tns-list.csv', type=str)
+	parser.add_argument('-t', '--time', help='# of days to go back in TNS query. default: 7', default=7.0, type=float)
 	args=parser.parse_args()
+
 	if args.function in ['finderchart', 'fchart', 'fc']:
 		assert args.ra != args.dec != None
 		FinderChart(args.ra, args.dec)
@@ -137,6 +155,9 @@ if __name__=='__main__':
 
 	elif args.function in ['scheduler', 'sched']:
 		Scheduler(args.fname, args.DECpenalty)
+
+	elif args.function in ['tnslist', 'tns']:
+		MakeTNSlist(args.output, args.dec_limit, args.mag_upper, args.mag_lower, args.time)
 
 	else:
 		raise ValueError('Unknown function argument %s' % args.function)

@@ -300,6 +300,7 @@ def CombineSpectra(bspec, rspec, combine='waverage', rebin=2.0):
 		else:
 			raise RuntimeError('Something went wrong in CombineSpectra...')
 
+		ipdb.set_trace()
 		ferr = np.sqrt(berr**2.0 + rerr**2.0)
 
 		
