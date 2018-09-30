@@ -11,6 +11,7 @@ from astropy.time import Time
 import sys
 import argparse
 import ipdb
+from spectra import CombineSpec
 
 try:
 	from SpectRes import spectres
@@ -280,7 +281,7 @@ class Spectrum():
 		self.fl = newfl
 		self.err = newerr
 
-def CombineSpectra(bspec, rspec, combine='waverage', rebin=2.0):
+def CombineSpectra(bspec, rspec, combine='wavg', rebin=2.0):
 
 	if combine in ['med', 'avg', 'wavg']:
 		wl0 = bspec.wl.min()
@@ -306,11 +307,11 @@ def CombineSpectra(bspec, rspec, combine='waverage', rebin=2.0):
 		
 
 	elif combine=='mask':
-		bkeep = np.where(bpsec.wl <= BAD_REGIONS[0][0])[0]
+		bkeep = np.where(bspec.wl <= BAD_REGIONS[0][0])[0]
 		rkeep = np.where(rspec.wl >= BAD_REGIONS[0][1])[0]
 		full_wave = np.append(bspec.wl[bkeep], rspec.wl[rkeep])
 		full_fl = np.append(bspec.fl[bkeep], rspec.fl[rkeep])
-
+		ferr = np.append(bspec.err[bkeep], rspec.err[rkeep])
 	elif combine =='snid':
 		bkeep = np.where(bspec.wl <= BAD_REGIONS[0][0])[0]
 		rkeep = np.where(rspec.wl <= BAD_REGIONS[0][1])[0]
