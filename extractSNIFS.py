@@ -11,10 +11,9 @@ from astropy.time import Time
 import sys
 import argparse
 import ipdb
-from spectra import CombineSpec
 
 try:
-	from SpectRes import spectres
+	from spectres import spectres
 except ImportError:
 	print('Could not import SpectRes! Need to install?')
 	sys.exit(1)
@@ -285,7 +284,7 @@ def CombineSpectra(bspec, rspec, combine='wavg', rebin=2.0):
 
 	if combine in ['med', 'avg', 'wavg']:
 		wl0 = bspec.wl.min()
-		wl1 = rspec.wl.max()	
+		wl1 = rspec.wl.max()
 		full_wave = np.arange(wl0+rebin, wl1-rebin, rebin)
 		bfl = np.interp(full_wave, bspec.wl, bspec.fl, left=0.0, right=0.0)
 		berr = np.interp(full_wave, bspec.wl, bspec.err, left=0.0, right=0.0)
@@ -334,17 +333,14 @@ if __name__=='__main__':
 	parser = argparse.ArgumentParser(description)
 	parser.add_argument('-d', '--dir', help='Directory where spec_*.fits files are located. Default: CWD', default=os.getcwd(), type=str)
 	parser.add_argument('-w', '--binsz', help='Output bin size of spectrum: default: 2.0', default=2.0, type=float)
-	parser.add_argument('-p', '--plot', help='Turn on (1)/off(0) plotting. Default: 1 (on)', default=1, type=int, choices=[0,1])
-	parser.add_argument('-m', '--mask', help='Whether to mask the dichroic, the A-band, both, or neither. Default: both', default='both', type=str, 
-		choices=['both', 'neither', 'dichroic', 'Aband'])
-	parser.add_argument('-b', '--blue', help='Extract blue channel? (0/1) Default: 1', default=1, type=int, choices=[0,1])
+	parser.add_argument('-p', '--plot', help='Turn on (1)/off(0) plotting. Default: 1 (on)', default=1, type=int, choices=[0,	parser.add_argument('-b', '--blue', help='Extract blue channel? (0/1) Default: 1', default=1, type=int, choices=[0,1])
 	parser.add_argument('-r', '--red', help='Extract red channel? (0/1) Default: 1', default=1, type=int, choices=[0,1])
 	parser.add_argument('-v', '--verbose', help='Verbose output off/on (0/1) Default: 0', default=0, type=int, choices=[0,1])
 	parser.add_argument('-n', '--name', help='Object names to be extracted, can be used multiple times: -n NAME1 -n NAME2 -- or -- -n NAME1 NAME2 etc. Default: None (extract all)',
 		default='', type=str)
 	parser.add_argument('-a', '--avoid', help='Objects to avoid (not extract). Same as above, can be re-used for multiple objects.', default='', type=str)
 	parser.add_argument('-o', '--overwrite', help='Overwrite existing extraced spectra? [0,1] Default: 0', default=0, choices=[0,1], type=int)
-	parser.add_argument('-c', '--combine', help='Combine method for blue/red arms. Default: waverage', default='wavg', 
+	parser.add_argument('-c', '--combine', help='Combine method for blue/red arms. Default: mask', default='mask', 
 		choices=['med', 'avg', 'wavg', 'mask', 'snid'], type=str)
 
 	args = parser.parse_args()

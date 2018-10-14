@@ -2,13 +2,12 @@ import subprocess, pip, shutil
 import os, sys
 
 PACKAGES = [
-	'SpectRes',
+	'spectres',
 	'astropy',
 	'numpy',
 	'matplotlib',
 	'argparse',
 	'pathlib',
-	'ipdb',
 	'pandas'
 ]
 

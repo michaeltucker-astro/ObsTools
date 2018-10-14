@@ -49,8 +49,6 @@ COLORS = {
 #
 TRANSIENTS = {
 	'Ia':['FeII','SiII', 'NaI', 'SII','CaII'],
-	'Ib':[],
-	'Ic':[],
 	'Ib/c':[],
 	'II':[],
 	'CV':['H', 'He'],

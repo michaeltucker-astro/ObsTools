@@ -3,12 +3,18 @@ Michael Tucker 2018
 Simple tools to make observing easier
 
 """
-
 import argparse
+from datetime import date, timedelta
+import requests
+import sys,os
+from pandas import read_csv, DataFrame
+from io import StringIO
+from astropy.coordinates import SkyCoord
+import numpy as np
+from collections import OrderedDict
+
 
 def CSVtoJsky(fname, outdir=None):
-	import sys,os
-	from pandas import read_csv
 	"""
 	function: CSVtoJsky
 
@@ -119,30 +125,114 @@ def Scheduler(fname, penalty=2.0):
 	print('IMPLEMENTATION INCOMPLETE! exiting...')
 
 
-def MakeTNSlist(ofile, declim, maghigh, maglow, Ndays):
-	baseURL = "https://wis-tns.weizmann.ac.il/search?&name=&name_like=0&isTNS_AT=yes&public=all&unclassified_at=1&classified_sne=0&ra=&decl=&radius=\
-				&coords_unit=arcsec&groupid%5B%5D=null&classifier_groupid%5B%5D=null&type%5B%5D=null&date_start%5Bdate%5D=2018-09-21&date_end%5Bdate%5D=\
-				2018-09-28&discovery_mag_min=&discovery_mag_max=20&internal_name=&redshift_min=&redshift_max=&spectra_count=&discoverer=&classifier=&\
-				discovery_instrument%5B%5D=&classification_instrument%5B%5D=&hostname=&associated_groups%5B%5D=null&ext_catid=&num_page=1000&\
-				display%5Bredshift%5D=1&display%5Bhostname%5D=1&display%5Bhost_redshift%5D=1&display%5Bsource_group_name%5D=1&\
-				display%5Bclassifying_source_group_name%5D=1&display%5Bdiscovering_instrument_name%5D=0&display%5Bclassifing_instrument_name%5D=0&\
-				display%5Bprograms_name%5D=0&display%5Binternal_name%5D=1&display%5BisTNS_AT%5D=0&display%5Bpublic%5D=1&display%5Bend_pop_period%5D=0&\
-				display%5Bspectra_count%5D=1&display%5Bdiscoverymag%5D=1&display%5Bdiscmagfilter%5D=1&display%5Bdiscoverydate%5D=1&display%5Bdiscoverer%5D=1&\
-				display%5Bsources%5D=0&display%5Bbibcode%5D=0&display%5Bext_catalogs%5D=0"
+def MakeTNSlist(ofile, declim, maglow, maghigh, Ndays, verbose):
+
+
+	end = date.today()
+	start = end - timedelta(days=Ndays)
+
+	if verbose:
+		print('#'*30)
+		print('Querying TNS unclassified list')
+		print('Parameters:')
+		print('\tStart date: %s' % str(start))
+		print('\tEnd date: %s' % str(end))
+		print('\tNdays = %2d' % Ndays)
+		print('\tMin mag: %3.1f' % maglow)
+		print('\tMax mag: %3.1f' % maghigh)
+		print('\tDec limit: %3.1f deg\n\n' % declim)
+
+	baseURL = 'https://wis-tns.weizmann.ac.il/search?isTNS_AT=yes&public=all&unclassified_at=1&date_start%%5Bdate%%5D=%s&date_end%%5Bdate%%5D=%s&discovery_mag_min=%3.1f&discovery_mag_max=%3.1f' % (start, end, maglow, maghigh)
+	endURL = '&num_page=1000&display%5Bredshift%5D=1&display%5Bhost_redshift%5D=1&display%5Binternal_name%5D=1&display%5Bdiscoverymag%5D=1&display%5Bdiscmagfilter%5D=1&display%5Bdiscoverydate%5D=1&format=csv' 
+	fullURL = baseURL+endURL
+
+
+	if verbose:print('Executing TNS request...')
+	resp = requests.get(baseURL+endURL)
+	if resp.status_code != 200:
+		raise ValueError('Error retrieving list from TNS! Check internet?')
+	else:
+		if verbose: print('\tComplete!')
+
+	if verbose: print('Parsing data...')
+	table = read_csv(StringIO(resp.content.decode()))
+	ATname = table['Name'].as_matrix()
+
+	RA = [ra[0]+'h'+ra[1]+'m'+ra[2]+'s' for ra in [ra.split(':') for ra in table['RA'].as_matrix()]]
+	DEC = [dec[0]+'d'+dec[1]+'m'+dec[2]+'s' for dec in [dec.split(':') for dec in table['DEC'].as_matrix()]]
+	coords = SkyCoord(RA,DEC)
+	RA = coords.ra.deg
+	DEC = coords.dec.deg
+	del coords
+
+	redshift = table['Redshift'].as_matrix()
+	hostz = table['Host Redshift'].as_matrix()
+	name = table['Disc. Internal Name'].as_matrix()
+	discmag = table['Discovery Mag'].as_matrix()
+	discfilter = table['Discovery Mag Filter'].as_matrix()
+	discdate = table['Discovery Date (UT)'].as_matrix()
+
+	del table
+
+	assert len(redshift[redshift > 0.0])==0
+	del redshift
+
+	keep = np.where(
+		(DEC >= declim) &
+		(discmag >= maglow) &
+		(discmag <= maghigh)
+		)[0]
+
+	if verbose: print('\tComplete!')
+
+	if verbose: print('Writing DataFrame...')
+
+	df = DataFrame(OrderedDict({
+		'Object':name[keep],
+		'ATname':ATname[keep],
+		'RA':RA[keep],
+		'DEC':DEC[keep],
+		'redshift':hostz[keep],
+		'DiscMag':discmag[keep],
+		'DiscFilter':discfilter[keep],
+		'DiscDate':discdate[keep]
+		}))
+
+
+	if os.path.exists(ofile):
+		print('-'*10)
+		resp = 'null'
+		while resp.strip().lower() not in ['','n','y'] and os.path.exists(ofile):
+			resp = input('%s already exists, overwrite? [Y/n] >' % ofile).strip().lower()
+			if resp in ['','y']: break
+			elif resp == 'n':
+				ofile = input('New output file (csv) >')
+
+			else:
+				print('Unrecognized input %s, ignoring...' % resp)
+
+	df.to_csv(ofile, index=False)
+	if verbose:print('DataFrame written to %s'%ofile)
+	if verbose: print('total objects: %d' % len(keep))
+
 
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description='Contains observing tools: CSVtoJsky, FinderChart')
 	parser.add_argument('function', help='Which function to run', choices=['finderchart','fchart', 'fc','csv2jsky','c2j', 'scheduler', 'sched','tnslist', 'tns'], type=str)
-	parser.add_argument('-r','--ra', help='RA for finderchart', type=str)
-	parser.add_argument('-d','--dec' help='DEC for finderchart', type=str)
+	parser.add_argument('-r','--ra', help='RA for finderchart (deg)', type=str)
+	parser.add_argument('-d','--dec', help='DEC for finderchart (deg)', type=str)
+	parser.add_argument('-i', '--internet', help='Internet browser to use for finderchart. default: google-chrome', default='google-chrome', 
+						choices=['google-chrome', 'firefox', 'safari'],type=str)
+
 	parser.add_argument('-f','--fname', help='CSV file for CSVtoJsky or Scheduler', type=str)
 	parser.add_argument('-p','--DECpenalty', help='Penalty factor for declination movements in Scheduler. Default: 2', default=2, type=float)
 	parser.add_argument('-dl', '--dec-limit', help='Dec. limit for TNS target list. Default: -30 [deg]', default=-30.0, type=float)
-	parser.add_argument('-mu', '--mag-upper', help='Mag upper limit for TNS target list. Default: 20 [mag]', default=20.0, type=float)
-	parser.add_argument('-ml', '--mag-lower', help='Mag lower limit for TNS target list. Default: 0 [mag]', default=0.0, type=float)
+	parser.add_argument('-mu', '--mag-upper', help='Mag upper limit for TNS target list. Default: 21 [mag]', default=21.0, type=float)
+	parser.add_argument('-ml', '--mag-lower', help='Mag lower limit for TNS target list. Default: 10 [mag]', default=10.0, type=float)
 	parser.add_argument('-o', '--output', help='Output filename for TNS target list. Default: tns-list.csv', default='tns-list.csv', type=str)
 	parser.add_argument('-t', '--time', help='# of days to go back in TNS query. default: 7', default=7.0, type=float)
+	parser.add_argument('--verbose', '-v', help='Turn on verbosity', action='store_true', default=False)
 	args=parser.parse_args()
 
 	if args.function in ['finderchart', 'fchart', 'fc']:
@@ -157,7 +247,7 @@ if __name__=='__main__':
 		Scheduler(args.fname, args.DECpenalty)
 
 	elif args.function in ['tnslist', 'tns']:
-		MakeTNSlist(args.output, args.dec_limit, args.mag_upper, args.mag_lower, args.time)
+		MakeTNSlist(args.output, args.dec_limit, args.mag_lower, args.mag_upper, args.time, args.verbose)
 
 	else:
 		raise ValueError('Unknown function argument %s' % args.function)
