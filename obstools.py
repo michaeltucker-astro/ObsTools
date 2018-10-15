@@ -3,6 +3,7 @@ Michael Tucker 2018
 Simple tools to make observing easier
 
 """
+
 import argparse
 from datetime import date, timedelta
 import requests
@@ -19,7 +20,7 @@ def CSVtoJsky(fname, outdir=None):
 	function: CSVtoJsky
 
 	Converts a CSV file to a file parse-able by JSkyCalc
-	CSV file must have colnames Target, RA, DEC
+	CSV file must have colnames Object, RA, DEC
 
 	Inputs:
 		fname: filename of csv file
@@ -125,8 +126,22 @@ def Scheduler(fname, penalty=2.0):
 	print('IMPLEMENTATION INCOMPLETE! exiting...')
 
 
-def MakeTNSlist(ofile, declim, maglow, maghigh, Ndays, verbose):
+def MakeTNSlist(ofile='tns_unclass.csv', declim=-30.0, maglow=0., maghigh=21., Ndays=7.0, verbose=False):
 
+	"""
+	Queries TNS for unclassified transients in last N days (arg) and with declination and discovery mag constraints
+
+	Inputs:
+		ofile (str): output csv file to write results. default: tns_unclass.csv
+		declim (float): minimum declination to keep targets. Default: -30.0
+		maglow (float): lower limit on discovery magnitudes from TNS. Default: 0
+		maghigh (float): upper limit of dsicovery mags from TNS. Default: 21.0
+		Ndays (float): Number of days to go back in TNS query. Default: 7.0
+		verbose: Verbose output? default: False
+
+	Outputs:
+		Results written to ofile
+	"""
 
 	end = date.today()
 	start = end - timedelta(days=Ndays)
