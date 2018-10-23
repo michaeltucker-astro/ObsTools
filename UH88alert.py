@@ -170,6 +170,8 @@ class Alert():
 			body = 'UH88 Weather Update: Current status WARN'
 		elif message == 'alarm':
 			body = 'UH88 Weather Update: Current Status CRITICAL'
+		elif message == 'close':
+			body = 'UH88 Weather Alert END'
 		else:
 			raise ValueError('Unknown message: %s' % message)
 
@@ -191,7 +193,8 @@ class Alert():
 		time.sleep(60.0*self.interval)
 
 	def Close(self):
-		if self.verbose: print('\nClose called, exiting alert system...\n')
+		if self.verbose: print('\nClose called, sending last alert...\n')
+		self.SendAlert('close')
 		self.logger('Exiting alert system: %s' % str(datetime.now()))
 		self.logger.close()
 		self.running = False

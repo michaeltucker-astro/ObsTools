@@ -1,0 +1,81 @@
+Starting UH88 alert system: 2018-10-19 19:49:53.230418
+==============================
+DATETIME: 2018-10-19 19:49:53.965290
+WARN: False
+ALARM: True
+Humidity: 90.6%
+Temperature: 0.5 C
+Wind speed: 12.8 mph
+
+==============================
+DATETIME: 2018-10-19 19:54:55.548165
+WARN: False
+ALARM: True
+Humidity: 93.4%
+Temperature: 0.4 C
+Wind speed: 15.2 mph
+
+==============================
+DATETIME: 2018-10-19 19:59:55.794193
+WARN: False
+ALARM: True
+Humidity: 94.3%
+Temperature: 0.4 C
+Wind speed: 12.1 mph
+
+==============================
+DATETIME: 2018-10-19 20:04:56.114103
+WARN: False
+ALARM: True
+Humidity: 93.4%
+Temperature: 0.3 C
+Wind speed: 6.7 mph
+
+==============================
+DATETIME: 2018-10-19 20:09:57.082765
+WARN: False
+ALARM: True
+Humidity: 92.3%
+Temperature: 0.2 C
+Wind speed: 9.8 mph
+
+==============================
+DATETIME: 2018-10-19 20:15:02.295966
+WARN: False
+ALARM: True
+Humidity: 90.5%
+Temperature: 0.2 C
+Wind speed: 10.8 mph
+
+==============================
+DATETIME: 2018-10-19 20:20:02.545847
+WARN: False
+ALARM: True
+Humidity: 93.9%
+Temperature: 0.3 C
+Wind speed: 14.1 mph
+
+==============================
+DATETIME: 2018-10-19 20:25:09.723159
+WARN: False
+ALARM: True
+Humidity: 95.1%
+Temperature: 0.3 C
+Wind speed: 14.7 mph
+
+==============================
+DATETIME: 2018-10-19 20:30:14.961061
+WARN: False
+ALARM: True
+Humidity: 94.2%
+Temperature: 0.3 C
+Wind speed: 14.1 mph
+
+==============================
+DATETIME: 2018-10-19 20:35:15.392304
+WARN: False
+ALARM: True
+Humidity: 93.7%
+Temperature: 0.3 C
+Wind speed: 14.2 mph
+

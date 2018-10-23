@@ -189,7 +189,9 @@ def MakeTNSlist(ofile='tns_unclass.csv', declim=-30.0, maglow=0., maghigh=21., N
 
 	del table
 
-	assert len(redshift[redshift > 0.0])==0
+	if not len(redshift[redshift > 0.0])==0:
+		print (redshift)
+		raise ValueError('')
 	del redshift
 
 	keep = np.where(

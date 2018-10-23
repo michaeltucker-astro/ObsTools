@@ -21,7 +21,7 @@ except ImportError:
 
 BAD_REGIONS = [[4900.0,5200.0], [7590.0, 7710.0]]
 
-def main(directory, binsz, plot, overwrite, mask, blue, red, verbose, names, avoid, combine):
+def main(directory, binsz, plot, overwrite, blue, red, verbose, names, avoid, combine):
 	if not os.path.exists(directory): raise IOError('Could not find directory %s' % directory)
 	if not os.path.isdir(directory): raise IOError('%s is not a directory' % directory)
 	if binsz <= 0.0: raise ValueError('Provided bin size is <= 0!')
@@ -275,7 +275,7 @@ class Spectrum():
 
 	def rebin(self, binsz):
 		newwl = np.arange(self.wl.min()+2.0*binsz, self.wl.max()-2.0*binsz, binsz)
-		newfl, newerr = spectres.spectres(self.wl, self.fl, newwl, self.err)
+		newfl, newerr = spectres(newwl, self.wl, self.fl, self.err)
 		self.wl = newwl
 		self.fl = newfl
 		self.err = newerr
@@ -333,7 +333,8 @@ if __name__=='__main__':
 	parser = argparse.ArgumentParser(description)
 	parser.add_argument('-d', '--dir', help='Directory where spec_*.fits files are located. Default: CWD', default=os.getcwd(), type=str)
 	parser.add_argument('-w', '--binsz', help='Output bin size of spectrum: default: 2.0', default=2.0, type=float)
-	parser.add_argument('-p', '--plot', help='Turn on (1)/off(0) plotting. Default: 1 (on)', default=1, type=int, choices=[0,	parser.add_argument('-b', '--blue', help='Extract blue channel? (0/1) Default: 1', default=1, type=int, choices=[0,1])
+	parser.add_argument('-p', '--plot', help='Turn on (1)/off(0) plotting. Default: 1 (on)', default=1, type=int, choices=[0,1])	
+	parser.add_argument('-b', '--blue', help='Extract blue channel? (0/1) Default: 1', default=1, type=int, choices=[0,1])
 	parser.add_argument('-r', '--red', help='Extract red channel? (0/1) Default: 1', default=1, type=int, choices=[0,1])
 	parser.add_argument('-v', '--verbose', help='Verbose output off/on (0/1) Default: 0', default=0, type=int, choices=[0,1])
 	parser.add_argument('-n', '--name', help='Object names to be extracted, can be used multiple times: -n NAME1 -n NAME2 -- or -- -n NAME1 NAME2 etc. Default: None (extract all)',
@@ -344,4 +345,4 @@ if __name__=='__main__':
 		choices=['med', 'avg', 'wavg', 'mask', 'snid'], type=str)
 
 	args = parser.parse_args()
-	main(args.dir, args.binsz, args.plot, args.overwrite, args.mask, args.blue, args.red, args.verbose, args.name, args.avoid,args.combine)
+	main(args.dir, args.binsz, args.plot, args.overwrite, args.blue, args.red, args.verbose, args.name, args.avoid,args.combine)
