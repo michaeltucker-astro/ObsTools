@@ -6,7 +6,7 @@ Simple tools to make observing easier
 
 import argparse
 from datetime import date, timedelta
-import requests
+import requests, subprocess
 import sys,os
 from pandas import read_csv, DataFrame
 from io import StringIO
@@ -42,10 +42,11 @@ def CSVtoJsky(fname, outdir=None):
 			dec = float(dec)
 			if dec >= 0.0: sign = '+'
 			else: sign = '-'
+			dec = abs(dec)
 			deg = int(dec)
 			dec = (dec - deg) * 60.0
-			dmin = int(dec)
-			dsec = round((dec - dmin) * 60.0, 2)
+			dmin = abs(int(dec))
+			dsec = abs(round((dec - dmin) * 60.0, 2))
 			decstr = '%s%02d %02d %05.2f' % (sign,deg, dmin, dsec)
 
 		except:
@@ -89,44 +90,56 @@ def CSVtoJsky(fname, outdir=None):
 	print ('File written to %s' % (outdir+'jsky.list'))
 	return
 
-def FinderChart(ra, dec):
-	import subprocess
+def CoordCheck(ra, dec):
+	if not (type(ra) == type(dec)): raise ValueError('ra and dec have conflicting types?')
 
-	if ':' in ra:
-		ra = ra.strip().split(':')
-		ra = float(ra[0])*360.0/24.0 + float(ra[1])/60.0 + float(ra[2])/3600.0
-	else:
-		ra = float(ra.strip())
+	if type(ra) is np.str:
+		ra = str(ra)
+		dec = str(dec)
+	
+	if type(ra) is str:
+		ra = ra.strip()
+		dec = dec.strip()
 
-	if ':' in dec:
-		if dec.startswith('-'): 
-			dec = dec[1:]
-			sign = -1.0
-		else: sign = 1.0
+		if ':' in ra:
+			return ra, dec
+		elif ' ' in ra:
+			return np.str.replace(ra, ' ', ':'), np.str.replace(dec, ' ', ':')
+		else:
+			try:
+				ra = float(ra)
+				dec = float(dec)
+			except:
+				raise TypeError('ra/dec are weird format!')
 
-		dec = dec.strip().split(':')
-		dec = float(dec[0]) + float(dec[1])/60.0 + float(dec[2])/3600.0
-		dec *= sign
-	else:
-		dec = float(dec.strip())
+	ra = float(ra)
+	ra0 = int(ra/24.)
+	ra -= ra0
+	ra1 = int(abs(ra)/60.0)
+	ra -= ra1
+	ra2 = round(abs(ra)/3600., 2)
+	rastr = str(ra0)+':'+str(ra1)+':'+str(ra2)
 
-	baseURL = 'http://astro.subhashbose.com/render_AlL.php?RA=%lf\&DEC=%lf' % (ra,dec)
-	subprocess.run('google-chrome --new-window %s' % baseURL, shell=True)
+	dec = float(dec)
+	dec0 = int(dec)
+	dec -= dec0
+	dec1 = int(abs(dec)/60.0)
+	dec -= dec1
+	dec2 = round(abs(dec)/3600.)
+	decstr = str(dec0)+':'+str(dec1)+':'+str(dec2)
 
-def Scheduler(fname, penalty=2.0):
-	data = read_csv(fname)
-	if not all([True if colname in data.columns else False for colname in ['Object','RA', 'DEC']]):
-		raise KeyError('CSV file must have colnames Object, RA and DEC!')
+	return rastr, decstr
 
-	names = data['Object'].as_matrix()
-	RA = data['RA'].as_matrix()
-	DEC = data['DEC'].as_matrix()
+def MakeAladinFinderChart(fname, ra0, dec0, radius=3):
+	aladinPATH='/home/tuckerma/Downloads/Aladin/Aladin.jar'
+	outff = os.path.join(os.getcwd(), fname)
 
+	ra, dec = CoordCheck(ra0,dec0)
 
-	print('IMPLEMENTATION INCOMPLETE! exiting...')
+	sp = subprocess.run('echo "get aladin %s %s %darcmin; save %s; quit" | java -jar %s -nogui' % (ra, dec, radius, outff,aladinPATH), shell=True, stdin=subprocess.PIPE)
 
 
-def MakeTNSlist(ofile='tns_unclass.csv', declim=-30.0, maglow=0., maghigh=21., Ndays=7.0, verbose=False):
+def MakeTNSlist(ofile='tns_unclass.csv', declim=-40.0, maglow=0., maghigh=19., Ndays=7.0, make_fcharts=True, verbose=True):
 
 	"""
 	Queries TNS for unclassified transients in last N days (arg) and with declination and discovery mag constraints
@@ -157,7 +170,7 @@ def MakeTNSlist(ofile='tns_unclass.csv', declim=-30.0, maglow=0., maghigh=21., N
 		print('\tMax mag: %3.1f' % maghigh)
 		print('\tDec limit: %3.1f deg\n\n' % declim)
 
-	baseURL = 'https://wis-tns.weizmann.ac.il/search?isTNS_AT=yes&public=all&unclassified_at=1&date_start%%5Bdate%%5D=%s&date_end%%5Bdate%%5D=%s&discovery_mag_min=%3.1f&discovery_mag_max=%3.1f' % (start, end, maglow, maghigh)
+	baseURL = 'https://wis-tns.weizmann.ac.il/search?isTNS_AT=yes&public=all&unclassified_at=1&at_type=1&date_start%%5Bdate%%5D=%s&date_end%%5Bdate%%5D=%s&discovery_mag_min=%3.1f&discovery_mag_max=%3.1f' % (start, end, maglow, maghigh)
 	endURL = '&num_page=1000&display%5Bredshift%5D=1&display%5Bhost_redshift%5D=1&display%5Binternal_name%5D=1&display%5Bdiscoverymag%5D=1&display%5Bdiscmagfilter%5D=1&display%5Bdiscoverydate%5D=1&format=csv' 
 	fullURL = baseURL+endURL
 
@@ -171,7 +184,7 @@ def MakeTNSlist(ofile='tns_unclass.csv', declim=-30.0, maglow=0., maghigh=21., N
 
 	if verbose: print('Parsing data...')
 	table = read_csv(StringIO(resp.content.decode()))
-	ATname = table['Name'].as_matrix()
+	ATname = np.array([np.str.replace(item, ' ', '') for item in table['Name']])
 
 	RA = [ra[0]+'h'+ra[1]+'m'+ra[2]+'s' for ra in [ra.split(':') for ra in table['RA'].as_matrix()]]
 	DEC = [dec[0]+'d'+dec[1]+'m'+dec[2]+'s' for dec in [dec.split(':') for dec in table['DEC'].as_matrix()]]
@@ -187,7 +200,6 @@ def MakeTNSlist(ofile='tns_unclass.csv', declim=-30.0, maglow=0., maghigh=21., N
 	discfilter = table['Discovery Mag Filter'].as_matrix()
 	discdate = table['Discovery Date (UT)'].as_matrix()
 
-	del table
 
 	if not len(redshift[redshift > 0.0])==0:
 		print (redshift)
@@ -204,17 +216,22 @@ def MakeTNSlist(ofile='tns_unclass.csv', declim=-30.0, maglow=0., maghigh=21., N
 
 	if verbose: print('Writing DataFrame...')
 
-	df = DataFrame(OrderedDict({
+	data = {
 		'Object':name[keep],
 		'ATname':ATname[keep],
-		'RA':RA[keep],
-		'DEC':DEC[keep],
+		'RA':table['RA'][keep],
+		'DEC':table['DEC'][keep],
 		'redshift':hostz[keep],
 		'DiscMag':discmag[keep],
 		'DiscFilter':discfilter[keep],
 		'DiscDate':discdate[keep]
-		}))
+		}
 
+	myorder = ['Object', 'ATname', 'RA', 'DEC', 'redshift', 'DiscMag', 'DiscFilter', 'DiscDate']
+
+
+	df = DataFrame(data)
+	df = df[myorder]
 
 	if os.path.exists(ofile):
 		print('-'*10)
@@ -230,6 +247,16 @@ def MakeTNSlist(ofile='tns_unclass.csv', declim=-30.0, maglow=0., maghigh=21., N
 
 	df.to_csv(ofile, index=False)
 	if verbose:print('DataFrame written to %s'%ofile)
+
+	if verbose: print('Making finder charts...')
+	outdir = './fcharts/'
+	if not os.path.exists(outdir):
+		os.mkdir(outdir)
+
+	for n, r, d in zip(name[keep], RA[keep], DEC[keep]):
+		outff = outdir+n+'.jpg'
+		MakeAladinFinderChart(n, r, d)
+
 	if verbose: print('total objects: %d' % len(keep))
 
 
@@ -239,11 +266,9 @@ if __name__=='__main__':
 	parser.add_argument('function', help='Which function to run', choices=['finderchart','fchart', 'fc','csv2jsky','c2j', 'scheduler', 'sched','tnslist', 'tns'], type=str)
 	parser.add_argument('-r','--ra', help='RA for finderchart (deg)', type=str)
 	parser.add_argument('-d','--dec', help='DEC for finderchart (deg)', type=str)
-	parser.add_argument('-i', '--internet', help='Internet browser to use for finderchart. default: google-chrome', default='google-chrome', 
-						choices=['google-chrome', 'firefox', 'safari'],type=str)
 
 	parser.add_argument('-f','--fname', help='CSV file for CSVtoJsky or Scheduler', type=str)
-	parser.add_argument('-p','--DECpenalty', help='Penalty factor for declination movements in Scheduler. Default: 2', default=2, type=float)
+
 	parser.add_argument('-dl', '--dec-limit', help='Dec. limit for TNS target list. Default: -30 [deg]', default=-30.0, type=float)
 	parser.add_argument('-mu', '--mag-upper', help='Mag upper limit for TNS target list. Default: 21 [mag]', default=21.0, type=float)
 	parser.add_argument('-ml', '--mag-lower', help='Mag lower limit for TNS target list. Default: 10 [mag]', default=10.0, type=float)

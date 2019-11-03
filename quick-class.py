@@ -37,7 +37,7 @@ COLORS = {
 	'SII':'c',
 	'CaII':'g',
 	'HeII':'g',
-	'OIII':'g',
+	'OIII':'r',
 	'NII':'g',
 	'NeIII':'skyblue',
 	'NeV':'skyblue'
@@ -110,7 +110,7 @@ class Plotter():
 		self.addLines(self.lines,start=True)
 		
 		axbox = plt.axes([0.1, 0.1, 0.5, 0.04])
-		zslider = Slider(axbox, 'Redshift', 0., 0.5, valinit=self.redshift, valstep=0.001)
+		zslider = Slider(axbox, 'Redshift', 0., 0.5, valinit=self.redshift, valstep=0.001, valfmt='%1.3f')
 		zslider.on_changed(self.addRedshift)
 
 		axbox = plt.axes([0.1, 0.06, 0.5, 0.04])
